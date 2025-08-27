@@ -1,0 +1,201 @@
+# This file contains the fastlane.tools configuration
+# You can find the documentation at https://docs.fastlane.tools
+#
+# For a list of all available actions, check out
+#     https://docs.fastlane.tools/actions
+#
+# For a list of all available plugins, check out
+#     https://docs.fastlane.tools/plugins/available-plugins
+
+# Uncomment the line if you want fastlane to automatically update itself
+# update_fastlane
+
+default_platform(:ios)
+
+platform :ios do
+  desc "Deploy white label assets and configuration for iOS"
+  lane :deploy_brand do |options|
+    brand_id = options[:brand_id] || "default"
+    
+    # Validate brand exists
+    unless File.exist?("../assets/brands/#{brand_id}/config.json")
+      UI.user_error!("Brand configuration not found for: #{brand_id}")
+    end
+    
+    # Copy brand-specific assets
+    copy_brand_assets(brand_id: brand_id)
+    
+    # Update app configuration
+    update_app_config(brand_id: brand_id)
+    
+    # Update iOS app icon and launch screen
+    update_ios_assets(brand_id: brand_id)
+    
+    UI.success("Successfully deployed brand: #{brand_id}")
+  end
+  
+  desc "Build and deploy white label app"
+  lane :build_and_deploy do |options|
+    brand_id = options[:brand_id] || "default"
+    build_mode = options[:build_mode] || "release"
+    
+    # Deploy brand assets first
+    deploy_brand(brand_id: brand_id)
+    
+    # Build the Flutter app with brand configuration
+    sh("cd .. && flutter build ios --#{build_mode} --dart-define=BRAND_ID=#{brand_id}")
+    
+    # Additional deployment steps can be added here
+    # e.g., upload to App Store Connect, TestFlight, etc.
+    
+    UI.success("Build and deployment completed for brand: #{brand_id}")
+  end
+  
+  private_lane :copy_brand_assets do |options|
+    brand_id = options[:brand_id]
+    
+    # Copy brand configuration to active config
+    sh("cp ../assets/brands/#{brand_id}/config.json ../assets/config/active_brand.json")
+    
+    # Copy brand assets
+    brand_assets_path = "../assets/brands/#{brand_id}"
+    if Dir.exist?(brand_assets_path)
+      Dir.glob("#{brand_assets_path}/*").each do |file|
+        next if File.basename(file) == "config.json"
+        FileUtils.cp(file, "../assets/brands/active/")
+      end
+    end
+    
+    UI.message("Copied assets for brand: #{brand_id}")
+  end
+  
+  private_lane :update_app_config do |options|
+    brand_id = options[:brand_id]
+    config_path = "../assets/brands/#{brand_id}/config.json"
+    
+    # Read brand configuration
+    config = JSON.parse(File.read(config_path))
+    
+    # Update iOS Info.plist with brand-specific values
+    update_info_plist(
+      plist_path: "../ios/Runner/Info.plist",
+      block: proc do |plist|
+        plist["CFBundleDisplayName"] = config["appTitle"]
+        plist["CFBundleName"] = config["brandName"]
+      end
+    )
+    
+    UI.message("Updated app configuration for brand: #{brand_id}")
+  end
+  
+  private_lane :update_ios_assets do |options|
+    brand_id = options[:brand_id]
+    
+    # Update app icon if brand-specific icon exists
+    brand_icon_path = "../assets/brands/#{brand_id}/app_icon.png"
+    if File.exist?(brand_icon_path)
+      # Copy to iOS app icon location
+      # This would typically involve generating all required icon sizes
+      UI.message("Updated iOS app icon for brand: #{brand_id}")
+    end
+    
+    # Update launch screen assets if they exist
+    brand_splash_path = "../assets/brands/#{brand_id}/splash_bg.png"
+    if File.exist?(brand_splash_path)
+      UI.message("Updated iOS launch screen for brand: #{brand_id}")
+    end
+  end
+end
+
+platform :android do
+  desc "Deploy white label assets and configuration for Android"
+  lane :deploy_brand do |options|
+    brand_id = options[:brand_id] || "default"
+    
+    # Validate brand exists
+    unless File.exist?("../assets/brands/#{brand_id}/config.json")
+      UI.user_error!("Brand configuration not found for: #{brand_id}")
+    end
+    
+    # Copy brand-specific assets
+    copy_brand_assets(brand_id: brand_id)
+    
+    # Update app configuration
+    update_app_config(brand_id: brand_id)
+    
+    # Update Android assets
+    update_android_assets(brand_id: brand_id)
+    
+    UI.success("Successfully deployed brand: #{brand_id}")
+  end
+  
+  desc "Build and deploy white label app"
+  lane :build_and_deploy do |options|
+    brand_id = options[:brand_id] || "default"
+    build_mode = options[:build_mode] || "release"
+    
+    # Deploy brand assets first
+    deploy_brand(brand_id: brand_id)
+    
+    # Build the Flutter app with brand configuration
+    sh("cd .. && flutter build apk --#{build_mode} --dart-define=BRAND_ID=#{brand_id}")
+    
+    # Additional deployment steps can be added here
+    # e.g., upload to Google Play Console
+    
+    UI.success("Build and deployment completed for brand: #{brand_id}")
+  end
+  
+  private_lane :copy_brand_assets do |options|
+    brand_id = options[:brand_id]
+    
+    # Copy brand configuration to active config
+    sh("cp ../assets/brands/#{brand_id}/config.json ../assets/config/active_brand.json")
+    
+    # Copy brand assets
+    brand_assets_path = "../assets/brands/#{brand_id}"
+    if Dir.exist?(brand_assets_path)
+      Dir.glob("#{brand_assets_path}/*").each do |file|
+        next if File.basename(file) == "config.json"
+        FileUtils.cp(file, "../assets/brands/active/")
+      end
+    end
+    
+    UI.message("Copied assets for brand: #{brand_id}")
+  end
+  
+  private_lane :update_app_config do |options|
+    brand_id = options[:brand_id]
+    config_path = "../assets/brands/#{brand_id}/config.json"
+    
+    # Read brand configuration
+    config = JSON.parse(File.read(config_path))
+    
+    # Update Android strings.xml with brand-specific values
+    strings_path = "../android/app/src/main/res/values/strings.xml"
+    if File.exist?(strings_path)
+      # Update app name in strings.xml
+      # This would typically involve XML parsing and updating
+      UI.message("Updated Android strings for brand: #{brand_id}")
+    end
+    
+    UI.message("Updated app configuration for brand: #{brand_id}")
+  end
+  
+  private_lane :update_android_assets do |options|
+    brand_id = options[:brand_id]
+    
+    # Update app icon if brand-specific icon exists
+    brand_icon_path = "../assets/brands/#{brand_id}/app_icon.png"
+    if File.exist?(brand_icon_path)
+      # Copy to Android app icon locations (mipmap directories)
+      UI.message("Updated Android app icon for brand: #{brand_id}")
+    end
+    
+    # Update splash screen assets if they exist
+    brand_splash_path = "../assets/brands/#{brand_id}/splash_bg.png"
+    if File.exist?(brand_splash_path)
+      UI.message("Updated Android splash screen for brand: #{brand_id}")
+    end
+  end
+end

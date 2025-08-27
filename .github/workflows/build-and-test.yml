@@ -1,0 +1,61 @@
+name: Build and Test
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        brand_id: [default, brand_a, brand_b]
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Setup Flutter
+      uses: subosito/flutter-action@v2
+      with:
+        flutter-version: '3.24.0'
+        channel: 'stable'
+
+    - name: Install dependencies
+      run: |
+        flutter pub get
+        dart run build_runner build --delete-conflicting-outputs
+
+    - name: Run tests
+      run: flutter test
+
+    - name: Analyze code
+      run: flutter analyze
+
+    - name: Check formatting
+      run: dart format --set-exit-if-changed .
+
+    - name: Build APK - ${{ matrix.brand_id }}
+      run: flutter build apk --debug --dart-define=BRAND_ID=${{ matrix.brand_id }}
+
+    - name: Verify brand configuration
+      run: |
+        echo "Testing brand configuration for: ${{ matrix.brand_id }}"
+        if [ -f "assets/brands/${{ matrix.brand_id }}/config.json" ]; then
+          echo "✅ Brand configuration found"
+          cat assets/brands/${{ matrix.brand_id }}/config.json | jq '.brandName, .appTitle, .splashScreenUrl'
+        else
+          echo "❌ Brand configuration missing"
+          exit 1
+        fi
+
+    - name: Upload test artifacts
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: test-build-${{ matrix.brand_id }}
+        path: build/app/outputs/flutter-apk/app-debug.apk
+        retention-days: 7
