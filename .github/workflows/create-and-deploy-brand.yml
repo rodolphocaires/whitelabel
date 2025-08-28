@@ -3,101 +3,14 @@ name: Create and Deploy New Brand
 on:
   workflow_dispatch:
     inputs:
-      # Brand Identity
       brand_id:
         description: 'Brand ID (unique identifier, lowercase, no spaces)'
         required: true
         type: string
-      brand_name:
-        description: 'Brand Name (display name)'
+      brand_config:
+        description: 'Brand Configuration JSON (see example in workflow description)'
         required: true
         type: string
-      app_title:
-        description: 'App Title (shown in app stores)'
-        required: true
-        type: string
-      
-      # Visual Assets
-      logo_path:
-        description: 'Logo Path (relative to assets/brands/[brand_id]/)'
-        required: false
-        default: 'logo.png'
-        type: string
-      splash_screen_url:
-        description: 'Splash Screen Image URL'
-        required: true
-        type: string
-      
-      # Color Scheme (hex colors with #)
-      primary_color:
-        description: 'Primary Color (hex, e.g., #E91E63)'
-        required: true
-        type: string
-      secondary_color:
-        description: 'Secondary Color (hex, e.g., #FFC107)'
-        required: true
-        type: string
-      accent_color:
-        description: 'Accent Color (hex, e.g., #4CAF50)'
-        required: true
-        type: string
-      background_color:
-        description: 'Background Color (hex, e.g., #FFFFFF)'
-        required: false
-        default: '#FFFFFF'
-        type: string
-      text_color:
-        description: 'Text Color (hex, e.g., #000000)'
-        required: false
-        default: '#000000'
-        type: string
-      
-      # Typography
-      font_family:
-        description: 'Font Family'
-        required: false
-        default: 'Roboto'
-        type: string
-      
-      # Custom Settings
-      enable_analytics:
-        description: 'Enable Analytics'
-        required: false
-        default: true
-        type: boolean
-      api_base_url:
-        description: 'API Base URL'
-        required: true
-        type: string
-      support_email:
-        description: 'Support Email'
-        required: true
-        type: string
-      terms_url:
-        description: 'Terms of Service URL'
-        required: false
-        type: string
-      privacy_url:
-        description: 'Privacy Policy URL'
-        required: false
-        type: string
-      show_welcome_screen:
-        description: 'Show Welcome Screen'
-        required: false
-        default: true
-        type: boolean
-      max_retries:
-        description: 'Maximum API Retries'
-        required: false
-        default: '3'
-        type: string
-      enable_dark_mode:
-        description: 'Enable Dark Mode'
-        required: false
-        default: false
-        type: boolean
-      
-      # Deployment Options
       platform:
         description: 'Platform to deploy'
         required: true
@@ -133,9 +46,12 @@ jobs:
       with:
         token: ${{ secrets.GITHUB_TOKEN }}
 
-    - name: Validate brand ID
+    - name: Parse and validate brand configuration
+      id: parse_config
       run: |
         BRAND_ID="${{ github.event.inputs.brand_id }}"
+        
+        # Validate brand ID
         if [[ ! "$BRAND_ID" =~ ^[a-z0-9_]+$ ]]; then
           echo "❌ Brand ID must be lowercase letters, numbers, and underscores only"
           exit 1
@@ -145,24 +61,56 @@ jobs:
           exit 1
         fi
         echo "✅ Brand ID '$BRAND_ID' is valid"
-
-    - name: Validate color formats
-      run: |
-        colors=(
-          "${{ github.event.inputs.primary_color }}"
-          "${{ github.event.inputs.secondary_color }}"
-          "${{ github.event.inputs.accent_color }}"
-          "${{ github.event.inputs.background_color }}"
-          "${{ github.event.inputs.text_color }}"
+        
+        # Parse JSON configuration
+        CONFIG='${{ github.event.inputs.brand_config }}'
+        echo "Parsing brand configuration..."
+        
+        # Validate JSON format
+        if ! echo "$CONFIG" | jq . > /dev/null 2>&1; then
+          echo "❌ Invalid JSON format in brand configuration"
+          exit 1
+        fi
+        
+        # Extract and validate required fields
+        BRAND_NAME=$(echo "$CONFIG" | jq -r '.brandName // empty')
+        APP_TITLE=$(echo "$CONFIG" | jq -r '.appTitle // empty')
+        PRIMARY_COLOR=$(echo "$CONFIG" | jq -r '.primaryColorHex // empty')
+        SPLASH_URL=$(echo "$CONFIG" | jq -r '.splashScreenUrl // empty')
+        API_URL=$(echo "$CONFIG" | jq -r '.customSettings.apiBaseUrl // empty')
+        SUPPORT_EMAIL=$(echo "$CONFIG" | jq -r '.customSettings.supportEmail // empty')
+        
+        if [ -z "$BRAND_NAME" ] || [ -z "$APP_TITLE" ] || [ -z "$PRIMARY_COLOR" ] || [ -z "$SPLASH_URL" ] || [ -z "$API_URL" ] || [ -z "$SUPPORT_EMAIL" ]; then
+          echo "❌ Missing required fields in configuration"
+          echo "Required: brandName, appTitle, primaryColorHex, splashScreenUrl, customSettings.apiBaseUrl, customSettings.supportEmail"
+          exit 1
+        fi
+        
+        # Validate color formats
+        COLORS=(
+          "$(echo "$CONFIG" | jq -r '.primaryColorHex // "#000000"')"
+          "$(echo "$CONFIG" | jq -r '.secondaryColorHex // "#000000"')"
+          "$(echo "$CONFIG" | jq -r '.accentColorHex // "#000000"')"
+          "$(echo "$CONFIG" | jq -r '.backgroundColorHex // "#FFFFFF"')"
+          "$(echo "$CONFIG" | jq -r '.textColorHex // "#000000"')"
         )
         
-        for color in "${colors[@]}"; do
+        for color in "${COLORS[@]}"; do
           if [[ ! "$color" =~ ^#[0-9A-Fa-f]{6}$ ]]; then
             echo "❌ Invalid color format: $color (must be #RRGGBB)"
             exit 1
           fi
         done
-        echo "✅ All colors are valid hex format"
+        
+        echo "✅ Brand configuration is valid"
+        
+        # Export parsed values for later steps
+        echo "BRAND_NAME=$BRAND_NAME" >> $GITHUB_OUTPUT
+        echo "APP_TITLE=$APP_TITLE" >> $GITHUB_OUTPUT
+        echo "PRIMARY_COLOR=$PRIMARY_COLOR" >> $GITHUB_OUTPUT
+        echo "SPLASH_URL=$SPLASH_URL" >> $GITHUB_OUTPUT
+        echo "API_URL=$API_URL" >> $GITHUB_OUTPUT
+        echo "SUPPORT_EMAIL=$SUPPORT_EMAIL" >> $GITHUB_OUTPUT
 
     - name: Create brand directory structure
       run: |
@@ -181,42 +129,19 @@ jobs:
         BRAND_ID="${{ github.event.inputs.brand_id }}"
         CONFIG_FILE="assets/brands/$BRAND_ID/config.json"
         
-        # Build custom settings JSON
-        CUSTOM_SETTINGS=$(cat << 'EOF'
-        {
-          "enableAnalytics": ${{ github.event.inputs.enable_analytics }},
-          "apiBaseUrl": "${{ github.event.inputs.api_base_url }}",
-          "supportEmail": "${{ github.event.inputs.support_email }}",
-          "termsUrl": "${{ github.event.inputs.terms_url }}",
-          "privacyUrl": "${{ github.event.inputs.privacy_url }}",
-          "showWelcomeScreen": ${{ github.event.inputs.show_welcome_screen }},
-          "maxRetries": ${{ github.event.inputs.max_retries }},
-          "enableDarkMode": ${{ github.event.inputs.enable_dark_mode }}
-        }
-        EOF
-        )
+        # Use the provided JSON configuration with brand ID path updates
+        CONFIG='${{ github.event.inputs.brand_config }}'
         
-        # Generate complete brand configuration
-        cat > "$CONFIG_FILE" << EOF
-        {
-          "brandName": "${{ github.event.inputs.brand_name }}",
-          "appTitle": "${{ github.event.inputs.app_title }}",
-          "logoPath": "assets/brands/$BRAND_ID/${{ github.event.inputs.logo_path }}",
-          "splashScreenUrl": "${{ github.event.inputs.splash_screen_url }}",
-          "primaryColorHex": "${{ github.event.inputs.primary_color }}",
-          "secondaryColorHex": "${{ github.event.inputs.secondary_color }}",
-          "accentColorHex": "${{ github.event.inputs.accent_color }}",
-          "backgroundColorHex": "${{ github.event.inputs.background_color }}",
-          "textColorHex": "${{ github.event.inputs.text_color }}",
-          "fontFamily": "${{ github.event.inputs.font_family }}",
-          "assets": {
-            "logo": "assets/brands/$BRAND_ID/${{ github.event.inputs.logo_path }}",
-            "splash_background": "assets/brands/$BRAND_ID/splash_bg.png",
-            "app_icon": "assets/brands/$BRAND_ID/app_icon.png"
-          },
-          "customSettings": $CUSTOM_SETTINGS
-        }
-        EOF
+        # Update asset paths to include the brand ID
+        UPDATED_CONFIG=$(echo "$CONFIG" | jq --arg brand_id "$BRAND_ID" '
+          .logoPath = "assets/brands/\($brand_id)/" + (.logoPath // "logo.png") |
+          .assets.logo = "assets/brands/\($brand_id)/" + (.logoPath // "logo.png") |
+          .assets.splash_background = "assets/brands/\($brand_id)/splash_bg.png" |
+          .assets.app_icon = "assets/brands/\($brand_id)/app_icon.png"
+        ')
+        
+        # Write the configuration to file
+        echo "$UPDATED_CONFIG" | jq '.' > "$CONFIG_FILE"
         
         echo "✅ Generated brand configuration:"
         cat "$CONFIG_FILE" | jq '.'
@@ -264,13 +189,12 @@ jobs:
         echo "🎉 Brand Creation Summary"
         echo "========================"
         echo "Brand ID: ${{ github.event.inputs.brand_id }}"
-        echo "Brand Name: ${{ github.event.inputs.brand_name }}"
-        echo "App Title: ${{ github.event.inputs.app_title }}"
-        echo "Primary Color: ${{ github.event.inputs.primary_color }}"
-        echo "Secondary Color: ${{ github.event.inputs.secondary_color }}"
-        echo "Splash Screen URL: ${{ github.event.inputs.splash_screen_url }}"
-        echo "API Base URL: ${{ github.event.inputs.api_base_url }}"
-        echo "Support Email: ${{ github.event.inputs.support_email }}"
+        echo "Brand Name: ${{ steps.parse_config.outputs.BRAND_NAME }}"
+        echo "App Title: ${{ steps.parse_config.outputs.APP_TITLE }}"
+        echo "Primary Color: ${{ steps.parse_config.outputs.PRIMARY_COLOR }}"
+        echo "Splash Screen URL: ${{ steps.parse_config.outputs.SPLASH_URL }}"
+        echo "API Base URL: ${{ steps.parse_config.outputs.API_URL }}"
+        echo "Support Email: ${{ steps.parse_config.outputs.SUPPORT_EMAIL }}"
         echo "Platform: ${{ github.event.inputs.platform }}"
         echo "Build Mode: ${{ github.event.inputs.build_mode }}"
 
@@ -417,8 +341,8 @@ jobs:
         echo "🎉 Brand Creation and Deployment Complete!"
         echo "=========================================="
         echo "Brand ID: ${{ needs.create-brand.outputs.brand_id }}"
-        echo "Brand Name: ${{ github.event.inputs.brand_name }}"
-        echo "App Title: ${{ github.event.inputs.app_title }}"
+        echo "Platform: ${{ github.event.inputs.platform }}"
+        echo "Build Mode: ${{ github.event.inputs.build_mode }}"
         echo ""
         echo "Deployment Status:"
         echo "- iOS: ${{ needs.deploy-ios.result || 'Skipped' }}"
