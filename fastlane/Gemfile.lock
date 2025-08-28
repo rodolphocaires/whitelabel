@@ -166,6 +166,7 @@ GEM
       xcodeproj (>= 1.13.0, < 2.0.0)
       xcpretty (~> 0.3.0)
       xcpretty-travis-formatter (>= 0.0.3, < 2.0.0)
+    ffi (1.17.0)
     ffi (1.17.0-arm64-darwin)
     fourflusher (2.3.1)
     fuzzy_match (2.0.4)
@@ -281,6 +282,7 @@ GEM
 
 PLATFORMS
   arm64-darwin
+  x86_64-linux
 
 DEPENDENCIES
   cocoapods (~> 1.12)
