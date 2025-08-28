@@ -4,7 +4,7 @@
   "logoPath": "logo.png",
   "splashScreenUrl": "https://picsum.photos/400/800?random=4",
   "primaryColorHex": "#FF6B35",
-  "secondaryColorHex": "#F7931E", 
+  "secondaryColorHex": "#F7931E",
   "accentColorHex": "#4CAF50",
   "backgroundColorHex": "#FFFFFF",
   "textColorHex": "#000000",
@@ -12,7 +12,7 @@
   "assets": {
     "logo": "logo.png",
     "splash_background": "splash_bg.png",
-    "app_icon": "app_icon.png"
+    "app_icon": "logo.png"
   },
   "customSettings": {
     "enableAnalytics": true,

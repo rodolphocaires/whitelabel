@@ -144,7 +144,7 @@ platform :ios do
     brand_id = options[:brand_id]
     
     # Update app icon if brand-specific icon exists
-    brand_icon_path = "../assets/brands/#{brand_id}/app_icon.png"
+    brand_icon_path = "../assets/brands/#{brand_id}/logo.png"
     if File.exist?(brand_icon_path)
       # Copy to iOS app icon location
       # This would typically involve generating all required icon sizes
@@ -286,7 +286,7 @@ platform :android do
     brand_id = options[:brand_id]
     
     # Update app icon if brand-specific icon exists
-    brand_icon_path = "../assets/brands/#{brand_id}/app_icon.png"
+    brand_icon_path = "../assets/brands/#{brand_id}/logo.png"
     if File.exist?(brand_icon_path)
       # Copy to Android app icon locations (mipmap directories)
       UI.message("Updated Android app icon for brand: #{brand_id}")

@@ -115,7 +115,6 @@ jobs:
         # Create placeholder assets
         touch "assets/brands/$BRAND_ID/logo.png"
         touch "assets/brands/$BRAND_ID/splash_bg.png"
-        touch "assets/brands/$BRAND_ID/app_icon.png"
         
         echo "✅ Created brand directory structure for $BRAND_ID"
 
@@ -132,7 +131,7 @@ jobs:
           .logoPath = "assets/brands/\($brand_id)/" + (.logoPath // "logo.png") |
           .assets.logo = "assets/brands/\($brand_id)/" + (.logoPath // "logo.png") |
           .assets.splash_background = "assets/brands/\($brand_id)/splash_bg.png" |
-          .assets.app_icon = "assets/brands/\($brand_id)/app_icon.png"
+          .assets.app_icon = "assets/brands/\($brand_id)/logo.png"
         ')
         
         # Write the configuration to file

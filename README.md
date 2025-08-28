@@ -63,7 +63,7 @@ Each brand is defined by a JSON configuration file containing:
   "assets": {
     "logo": "assets/brands/brand_a/logo.png",
     "splash_background": "assets/brands/brand_a/splash_bg.png",
-    "app_icon": "assets/brands/brand_a/app_icon.png"
+    "app_icon": "assets/brands/brand_a/logo.png"
   },
   "customSettings": {
     "enableAnalytics": true,

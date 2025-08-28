@@ -12,7 +12,7 @@
   "assets": {
     "logo": "assets/brands/brand_b/logo.png",
     "splash_background": "assets/brands/brand_b/splash_bg.png",
-    "app_icon": "assets/brands/brand_b/app_icon.png"
+    "app_icon": "assets/brands/brand_b/logo.png"
   },
   "customSettings": {
     "enableAnalytics": false,

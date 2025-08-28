@@ -62,7 +62,7 @@ cat > "assets/brands/$BRAND_ID/config.json" << EOF
   "assets": {
     "logo": "assets/brands/$BRAND_ID/logo.png",
     "splash_background": "assets/brands/$BRAND_ID/splash_bg.png",
-    "app_icon": "assets/brands/$BRAND_ID/app_icon.png"
+    "app_icon": "assets/brands/$BRAND_ID/logo.png"
   },
   "customSettings": {
     "enableAnalytics": true,
@@ -77,7 +77,7 @@ EOF
 # Create placeholder assets
 touch "assets/brands/$BRAND_ID/logo.png"
 touch "assets/brands/$BRAND_ID/splash_bg.png"
-touch "assets/brands/$BRAND_ID/app_icon.png"
+touch "assets/brands/$BRAND_ID/logo.png"
 
 print_status "Brand created successfully: $BRAND_ID"
 print_warning "Don't forget to:"
