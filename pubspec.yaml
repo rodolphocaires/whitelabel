@@ -72,7 +72,6 @@ flutter:
     - assets/brands/default/
     - assets/brands/brand_a/
     - assets/brands/brand_b/
-    - assets/brands/active/
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
