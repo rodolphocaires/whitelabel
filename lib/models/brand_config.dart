@@ -1,5 +1,5 @@
-import 'package:json_annotation/json_annotation.dart';
 import 'package:flutter/material.dart';
+import 'package:json_annotation/json_annotation.dart';
 
 part 'brand_config.g.dart';
 
@@ -33,7 +33,8 @@ class BrandConfig {
     this.customSettings = const {},
   });
 
-  factory BrandConfig.fromJson(Map<String, dynamic> json) => _$BrandConfigFromJson(json);
+  factory BrandConfig.fromJson(Map<String, dynamic> json) =>
+      _$BrandConfigFromJson(json);
   Map<String, dynamic> toJson() => _$BrandConfigToJson(this);
 
   // Helper methods to convert hex colors to Flutter Colors
@@ -56,7 +57,6 @@ class BrandConfig {
       colorScheme: ColorScheme.fromSeed(
         seedColor: primaryColor,
         secondary: secondaryColor,
-        background: backgroundColor,
         surface: backgroundColor,
       ),
       scaffoldBackgroundColor: backgroundColor,
@@ -82,7 +82,9 @@ class BrandConfig {
   static MaterialColor _createMaterialColor(Color color) {
     List strengths = <double>[.05];
     Map<int, Color> swatch = {};
-    final int r = color.red, g = color.green, b = color.blue;
+    final int r = color.r.toInt();
+    final int g = color.g.toInt();
+    final int b = color.b.toInt();
 
     for (int i = 1; i < 10; i++) {
       strengths.add(0.1 * i);
@@ -96,6 +98,6 @@ class BrandConfig {
         1,
       );
     }
-    return MaterialColor(color.value, swatch);
+    return MaterialColor(color.toARGB32(), swatch);
   }
 }

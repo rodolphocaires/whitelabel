@@ -1,5 +1,8 @@
 import 'dart:convert';
+
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+
 import '../models/brand_config.dart';
 
 class BrandConfigService {
@@ -23,18 +26,20 @@ class BrandConfigService {
 
       final String configString = await rootBundle.loadString(configPath);
       final Map<String, dynamic> configJson = json.decode(configString);
-      
+
       _currentConfig = BrandConfig.fromJson(configJson);
       return _currentConfig!;
     } catch (e) {
       // Fallback to default configuration if specific brand config fails
       if (brandId != null) {
-        print('Failed to load brand config for $brandId, falling back to default: $e');
+        debugPrint(
+          'Failed to load brand config for $brandId, falling back to default: $e',
+        );
         return loadBrandConfig(); // Load default
       }
-      
+
       // If even default fails, create a minimal fallback
-      print('Failed to load default brand config, using fallback: $e');
+      debugPrint('Failed to load default brand config, using fallback: $e');
       _currentConfig = _createFallbackConfig();
       return _currentConfig!;
     }
@@ -50,7 +55,9 @@ class BrandConfigService {
   static String getAssetPath(String assetKey) {
     final config = _currentConfig;
     if (config == null) {
-      throw StateError('Brand configuration not loaded. Call initialize() first.');
+      throw StateError(
+        'Brand configuration not loaded. Call initialize() first.',
+      );
     }
 
     // Check if the asset is defined in the brand config
@@ -66,7 +73,9 @@ class BrandConfigService {
   static String get logoPath {
     final config = _currentConfig;
     if (config == null) {
-      throw StateError('Brand configuration not loaded. Call initialize() first.');
+      throw StateError(
+        'Brand configuration not loaded. Call initialize() first.',
+      );
     }
     return config.logoPath;
   }

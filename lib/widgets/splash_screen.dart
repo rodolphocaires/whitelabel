@@ -1,13 +1,11 @@
 import 'package:flutter/material.dart';
+
 import '../services/brand_config_service.dart';
 
 class SplashScreen extends StatefulWidget {
   final VoidCallback onInitializationComplete;
 
-  const SplashScreen({
-    super.key,
-    required this.onInitializationComplete,
-  });
+  const SplashScreen({super.key, required this.onInitializationComplete});
 
   @override
   State<SplashScreen> createState() => _SplashScreenState();
@@ -26,13 +24,9 @@ class _SplashScreenState extends State<SplashScreen>
       duration: const Duration(milliseconds: 2000),
       vsync: this,
     );
-    _fadeAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _animationController,
-      curve: Curves.easeIn,
-    ));
+    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _animationController, curve: Curves.easeIn),
+    );
 
     _startSplashSequence();
   }
@@ -64,7 +58,7 @@ class _SplashScreenState extends State<SplashScreen>
         }
       } catch (e) {
         // Handle image loading error
-        print('Failed to load splash screen image: $e');
+        debugPrint('Failed to load splash screen image: $e');
         if (mounted) {
           setState(() {
             _imageLoaded = true; // Continue even if image fails
@@ -87,13 +81,9 @@ class _SplashScreenState extends State<SplashScreen>
   @override
   Widget build(BuildContext context) {
     final config = BrandConfigService.currentConfig;
-    
+
     if (config == null) {
-      return const Scaffold(
-        body: Center(
-          child: CircularProgressIndicator(),
-        ),
-      );
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
     return Scaffold(
@@ -110,10 +100,7 @@ class _SplashScreenState extends State<SplashScreen>
                 gradient: LinearGradient(
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
-                  colors: [
-                    config.primaryColor,
-                    config.secondaryColor,
-                  ],
+                  colors: [config.primaryColor, config.secondaryColor],
                 ),
               ),
               child: Stack(
@@ -140,7 +127,7 @@ class _SplashScreenState extends State<SplashScreen>
                         },
                       ),
                     ),
-                  
+
                   // Overlay gradient for better text visibility
                   Positioned.fill(
                     child: Container(
@@ -149,14 +136,14 @@ class _SplashScreenState extends State<SplashScreen>
                           begin: Alignment.topCenter,
                           end: Alignment.bottomCenter,
                           colors: [
-                            Colors.black.withOpacity(0.3),
-                            Colors.black.withOpacity(0.6),
+                            Colors.black.withValues(alpha: 0.3),
+                            Colors.black.withValues(alpha: 0.6),
                           ],
                         ),
                       ),
                     ),
                   ),
-                  
+
                   // Content
                   Center(
                     child: Column(
@@ -167,11 +154,11 @@ class _SplashScreenState extends State<SplashScreen>
                           width: 120,
                           height: 120,
                           decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.9),
+                            color: Colors.white.withValues(alpha: 0.9),
                             borderRadius: BorderRadius.circular(20),
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.black.withOpacity(0.2),
+                                color: Colors.black.withValues(alpha: 0.2),
                                 blurRadius: 10,
                                 offset: const Offset(0, 5),
                               ),
@@ -179,7 +166,10 @@ class _SplashScreenState extends State<SplashScreen>
                           ),
                           child: Center(
                             child: Text(
-                              config.brandName.split(' ').map((word) => word[0]).join(''),
+                              config.brandName
+                                  .split(' ')
+                                  .map((word) => word[0])
+                                  .join(''),
                               style: TextStyle(
                                 color: config.primaryColor,
                                 fontSize: 36,
@@ -188,9 +178,9 @@ class _SplashScreenState extends State<SplashScreen>
                             ),
                           ),
                         ),
-                        
+
                         const SizedBox(height: 30),
-                        
+
                         // App title
                         Text(
                           config.appTitle,
@@ -201,22 +191,22 @@ class _SplashScreenState extends State<SplashScreen>
                           ),
                           textAlign: TextAlign.center,
                         ),
-                        
+
                         const SizedBox(height: 10),
-                        
+
                         // Brand name
                         Text(
                           config.brandName,
                           style: TextStyle(
-                            color: Colors.white.withOpacity(0.9),
+                            color: Colors.white.withValues(alpha: 0.9),
                             fontSize: 16,
                             fontWeight: FontWeight.w300,
                           ),
                           textAlign: TextAlign.center,
                         ),
-                        
+
                         const SizedBox(height: 50),
-                        
+
                         // Loading indicator
                         SizedBox(
                           width: 40,
@@ -224,7 +214,7 @@ class _SplashScreenState extends State<SplashScreen>
                           child: CircularProgressIndicator(
                             strokeWidth: 3,
                             valueColor: AlwaysStoppedAnimation<Color>(
-                              Colors.white.withOpacity(0.8),
+                              Colors.white.withValues(alpha: 0.8),
                             ),
                           ),
                         ),
