@@ -1,17 +1,20 @@
 import 'package:flutter/material.dart';
+
 import 'services/brand_config_service.dart';
 import 'widgets/brand_logo.dart';
-import 'widgets/splash_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
+
   // Get brand ID from environment variable or use default
-  const String brandId = String.fromEnvironment('BRAND_ID', defaultValue: 'default');
-  
+  const String brandId = String.fromEnvironment(
+    'BRAND_ID',
+    defaultValue: 'default',
+  );
+
   // Initialize brand configuration at build time
   await BrandConfigService.initialize(brandId);
-  
+
   runApp(const WhiteLabelApp());
 }
 
@@ -23,34 +26,20 @@ class WhiteLabelApp extends StatefulWidget {
 }
 
 class _WhiteLabelAppState extends State<WhiteLabelApp> {
-  bool _showSplash = true;
-
   @override
   Widget build(BuildContext context) {
     final brandConfig = BrandConfigService.currentConfig;
-    
+
     if (brandConfig == null) {
       return MaterialApp(
-        home: Scaffold(
-          body: Center(
-            child: CircularProgressIndicator(),
-          ),
-        ),
+        home: Scaffold(body: Center(child: CircularProgressIndicator())),
       );
     }
 
     return MaterialApp(
       title: brandConfig.appTitle,
       theme: brandConfig.themeData,
-      home: _showSplash
-          ? SplashScreen(
-              onInitializationComplete: () {
-                setState(() {
-                  _showSplash = false;
-                });
-              },
-            )
-          : MyHomePage(title: brandConfig.appTitle),
+      home: MyHomePage(title: brandConfig.appTitle),
     );
   }
 }
@@ -114,10 +103,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: <Widget>[
                   // Brand logo
-                  const BrandLogo(
-                    width: 120,
-                    height: 120,
-                  ),
+                  const BrandLogo(width: 120, height: 120),
                   const SizedBox(height: 20),
                   Text(
                     'Welcome to ${BrandConfigService.currentConfig?.brandName ?? "White Label App"}',
@@ -144,9 +130,15 @@ class _MyHomePageState extends State<MyHomePage> {
                             style: Theme.of(context).textTheme.titleMedium,
                           ),
                           const SizedBox(height: 8),
-                          Text('Brand: ${BrandConfigService.currentConfig?.brandName ?? "Unknown"}'),
-                          Text('App Title: ${BrandConfigService.currentConfig?.appTitle ?? "Unknown"}'),
-                          Text('Primary Color: ${BrandConfigService.currentConfig?.primaryColorHex ?? "Unknown"}'),
+                          Text(
+                            'Brand: ${BrandConfigService.currentConfig?.brandName ?? "Unknown"}',
+                          ),
+                          Text(
+                            'App Title: ${BrandConfigService.currentConfig?.appTitle ?? "Unknown"}',
+                          ),
+                          Text(
+                            'Primary Color: ${BrandConfigService.currentConfig?.primaryColorHex ?? "Unknown"}',
+                          ),
                         ],
                       ),
                     ),
