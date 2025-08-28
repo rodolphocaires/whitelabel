@@ -67,9 +67,10 @@ class BrandConfig {
         titleLarge: TextStyle(color: textColor, fontFamily: fontFamily),
         titleMedium: TextStyle(color: textColor, fontFamily: fontFamily),
         titleSmall: TextStyle(color: textColor, fontFamily: fontFamily),
+        headlineMedium: TextStyle(color: textColor, fontFamily: fontFamily),
       ),
       cardTheme: CardThemeData(
-        color: _darkenColor(backgroundColor, 0.1),
+        color: _darkenColor(backgroundColor, 0.05),
         elevation: 2,
       ),
       floatingActionButtonTheme: FloatingActionButtonThemeData(
