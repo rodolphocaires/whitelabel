@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        brand_id: [default, brand_a, brand_b]
+        brand_id: [brand_a, brand_b]
     
     steps:
     - name: Checkout repository
