@@ -60,9 +60,14 @@ platform :ios do
     # Copy brand assets
     brand_assets_path = "../assets/brands/#{brand_id}"
     if Dir.exist?(brand_assets_path)
+      # Ensure active directory exists
+      FileUtils.mkdir_p("../assets/brands/active") unless Dir.exist?("../assets/brands/active")
+      
       Dir.glob("#{brand_assets_path}/*").each do |file|
         next if File.basename(file) == "config.json"
         next if File.directory?(file)
+        next unless File.size(file) > 0  # Skip empty placeholder files
+        
         destination = File.join("../assets/brands/active", File.basename(file))
         FileUtils.cp(file, destination)
       end
@@ -157,9 +162,14 @@ platform :android do
     # Copy brand assets
     brand_assets_path = "../assets/brands/#{brand_id}"
     if Dir.exist?(brand_assets_path)
+      # Ensure active directory exists
+      FileUtils.mkdir_p("../assets/brands/active") unless Dir.exist?("../assets/brands/active")
+      
       Dir.glob("#{brand_assets_path}/*").each do |file|
         next if File.basename(file) == "config.json"
         next if File.directory?(file)
+        next unless File.size(file) > 0  # Skip empty placeholder files
+        
         destination = File.join("../assets/brands/active", File.basename(file))
         FileUtils.cp(file, destination)
       end
