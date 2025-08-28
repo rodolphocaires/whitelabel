@@ -195,60 +195,7 @@ jobs:
         echo "Platform: ${{ github.event.inputs.platform }}"
         echo "Build Mode: ${{ github.event.inputs.build_mode }}"
 
-  deploy-ios:
-    if: ${{ github.event.inputs.platform == 'ios' || github.event.inputs.platform == 'both' }}
-    needs: create-brand
-    runs-on: macos-latest
-    
-    steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
-      with:
-        ref: ${{ github.ref }}
-
-    - name: Pull latest changes
-      run: git pull origin ${{ github.ref_name }}
-
-    - name: Setup Flutter
-      uses: subosito/flutter-action@v2
-      with:
-        flutter-version: '3.35.2'
-        channel: 'stable'
-
-    - name: Setup Ruby
-      uses: ruby/setup-ruby@v1
-      with:
-        ruby-version: '3.0'
-        bundler-cache: true
-        working-directory: fastlane
-
-    - name: Install dependencies
-      run: |
-        flutter pub get
-        dart run build_runner build --delete-conflicting-outputs
-
-    - name: Deploy iOS - ${{ needs.create-brand.outputs.brand_id }}
-      env:
-        FASTLANE_APPLE_APPLICATION_SPECIFIC_PASSWORD: ${{ secrets.FASTLANE_APPLE_APPLICATION_SPECIFIC_PASSWORD }}
-        FASTLANE_SESSION: ${{ secrets.FASTLANE_SESSION }}
-        FASTLANE_USER: ${{ secrets.FASTLANE_USER }}
-        MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
-      run: |
-        cd fastlane
-        bundle exec fastlane ios deploy_brand brand_id:${{ needs.create-brand.outputs.brand_id }}
-
-    - name: Upload iOS artifacts
-      uses: actions/upload-artifact@v4
-      if: always()
-      with:
-        name: ios-${{ needs.create-brand.outputs.brand_id }}-${{ github.event.inputs.build_mode }}
-        path: |
-          build/ios/iphoneos/*.app
-          build/ios/iphoneos/*.ipa
-        retention-days: 30
-
   deploy-android:
-    if: ${{ github.event.inputs.platform == 'android' || github.event.inputs.platform == 'both' }}
     needs: create-brand
     runs-on: ubuntu-latest
     
@@ -320,7 +267,7 @@ jobs:
         retention-days: 30
 
   summary:
-    needs: [create-brand, deploy-ios, deploy-android]
+    needs: [create-brand, deploy-android]
     if: always()
     runs-on: ubuntu-latest
     
@@ -334,7 +281,6 @@ jobs:
         echo "Build Mode: ${{ github.event.inputs.build_mode }}"
         echo ""
         echo "Deployment Status:"
-        echo "- iOS: ${{ needs.deploy-ios.result || 'Skipped' }}"
         echo "- Android: ${{ needs.deploy-android.result || 'Skipped' }}"
         echo ""
         echo "Configuration committed to repository ✅"
