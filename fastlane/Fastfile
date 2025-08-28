@@ -100,9 +100,15 @@ platform :ios do
       File.write(strings_path, strings_content)
       UI.message("Updated Android app name to: #{app_name}")
       
-      # Update app icon if logo exists
+      # Update app icon if logo exists and is a valid image
       logo_path = "../assets/brands/#{brand_id}/logo.png"
       if File.exist?(logo_path) && File.size(logo_path) > 0
+        # Validate that the file is a valid PNG by checking magic bytes
+        begin
+          file_content = File.binread(logo_path, 8)
+          is_valid_png = file_content[0..3] == "\x89PNG".force_encoding('ASCII-8BIT')
+          
+          if is_valid_png
         icon_dirs = [
           "../android/app/src/main/res/mipmap-hdpi",
           "../android/app/src/main/res/mipmap-mdpi", 
@@ -116,7 +122,13 @@ platform :ios do
           FileUtils.cp(logo_path, File.join(dir, "ic_launcher.png"))
         end
         
-        UI.message("Updated Android app icon from: #{logo_path}")
+            UI.message("Updated Android app icon from: #{logo_path}")
+          else
+            UI.message("Skipping Android app icon update - invalid PNG file: #{logo_path}")
+          end
+        rescue => e
+          UI.message("Skipping Android app icon update - error reading file: #{e.message}")
+        end
       end
     end
   end
@@ -243,9 +255,15 @@ platform :android do
       File.write(strings_path, strings_content)
       UI.message("Updated Android app name to: #{app_name}")
       
-      # Update app icon if logo exists
+      # Update app icon if logo exists and is a valid image
       logo_path = "../assets/brands/#{brand_id}/logo.png"
       if File.exist?(logo_path) && File.size(logo_path) > 0
+        # Validate that the file is a valid PNG by checking magic bytes
+        begin
+          file_content = File.binread(logo_path, 8)
+          is_valid_png = file_content[0..3] == "\x89PNG".force_encoding('ASCII-8BIT')
+          
+          if is_valid_png
         icon_dirs = [
           "../android/app/src/main/res/mipmap-hdpi",
           "../android/app/src/main/res/mipmap-mdpi", 
@@ -259,7 +277,13 @@ platform :android do
           FileUtils.cp(logo_path, File.join(dir, "ic_launcher.png"))
         end
         
-        UI.message("Updated Android app icon from: #{logo_path}")
+            UI.message("Updated Android app icon from: #{logo_path}")
+          else
+            UI.message("Skipping Android app icon update - invalid PNG file: #{logo_path}")
+          end
+        rescue => e
+          UI.message("Skipping Android app icon update - error reading file: #{e.message}")
+        end
       end
     end
   end
