@@ -73,7 +73,52 @@ platform :ios do
       end
     end
     
+    # Update Android branding
+    update_android_branding(brand_id: brand_id)
+    
     UI.message("Copied assets for brand: #{brand_id}")
+  end
+  
+  private_lane :update_android_branding do |options|
+    brand_id = options[:brand_id]
+    config_path = "../assets/brands/#{brand_id}/config.json"
+    
+    if File.exist?(config_path)
+      config = JSON.parse(File.read(config_path))
+      
+      # Update app name in strings.xml
+      strings_path = "../android/app/src/main/res/values/strings.xml"
+      app_name = config['appTitle'] || config['brandName'] || 'WhiteLabel App'
+      
+      strings_content = <<~XML
+        <?xml version="1.0" encoding="utf-8"?>
+        <resources>
+            <string name="app_name">#{app_name}</string>
+        </resources>
+      XML
+      
+      File.write(strings_path, strings_content)
+      UI.message("Updated Android app name to: #{app_name}")
+      
+      # Update app icon if logo exists
+      logo_path = "../assets/brands/#{brand_id}/logo.png"
+      if File.exist?(logo_path) && File.size(logo_path) > 0
+        icon_dirs = [
+          "../android/app/src/main/res/mipmap-hdpi",
+          "../android/app/src/main/res/mipmap-mdpi", 
+          "../android/app/src/main/res/mipmap-xhdpi",
+          "../android/app/src/main/res/mipmap-xxhdpi",
+          "../android/app/src/main/res/mipmap-xxxhdpi"
+        ]
+        
+        icon_dirs.each do |dir|
+          FileUtils.mkdir_p(dir) unless Dir.exist?(dir)
+          FileUtils.cp(logo_path, File.join(dir, "ic_launcher.png"))
+        end
+        
+        UI.message("Updated Android app icon from: #{logo_path}")
+      end
+    end
   end
   
   private_lane :update_app_config do |options|
@@ -117,23 +162,19 @@ end
 platform :android do
   desc "Deploy white label assets and configuration for Android"
   lane :deploy_brand do |options|
-    brand_id = options[:brand_id] || "default"
+    brand_id = options[:brand_id]
     
-    # Validate brand exists
-    unless File.exist?("../assets/brands/#{brand_id}/config.json")
-      UI.user_error!("Brand configuration not found for: #{brand_id}")
-    end
-    
-    # Copy brand-specific assets
+    # Copy brand assets and configuration
     copy_brand_assets(brand_id: brand_id)
     
     # Update app configuration
     update_app_config(brand_id: brand_id)
     
-    # Update Android assets
-    update_android_assets(brand_id: brand_id)
+    # Build the app with dynamic package name
+    package_name = "com.example.#{brand_id}"
+    sh("cd .. && flutter build apk --release --dart-define=BRAND_ID=#{brand_id} -P BRAND_PACKAGE_NAME=#{package_name}")
     
-    UI.success("Successfully deployed brand: #{brand_id}")
+    UI.success("Successfully deployed brand: #{brand_id} with package: #{package_name}")
   end
   
   desc "Build and deploy white label app"
@@ -175,7 +216,52 @@ platform :android do
       end
     end
     
+    # Update Android branding
+    update_android_branding(brand_id: brand_id)
+    
     UI.message("Copied assets for brand: #{brand_id}")
+  end
+  
+  private_lane :update_android_branding do |options|
+    brand_id = options[:brand_id]
+    config_path = "../assets/brands/#{brand_id}/config.json"
+    
+    if File.exist?(config_path)
+      config = JSON.parse(File.read(config_path))
+      
+      # Update app name in strings.xml
+      strings_path = "../android/app/src/main/res/values/strings.xml"
+      app_name = config['appTitle'] || config['brandName'] || 'WhiteLabel App'
+      
+      strings_content = <<~XML
+        <?xml version="1.0" encoding="utf-8"?>
+        <resources>
+            <string name="app_name">#{app_name}</string>
+        </resources>
+      XML
+      
+      File.write(strings_path, strings_content)
+      UI.message("Updated Android app name to: #{app_name}")
+      
+      # Update app icon if logo exists
+      logo_path = "../assets/brands/#{brand_id}/logo.png"
+      if File.exist?(logo_path) && File.size(logo_path) > 0
+        icon_dirs = [
+          "../android/app/src/main/res/mipmap-hdpi",
+          "../android/app/src/main/res/mipmap-mdpi", 
+          "../android/app/src/main/res/mipmap-xhdpi",
+          "../android/app/src/main/res/mipmap-xxhdpi",
+          "../android/app/src/main/res/mipmap-xxxhdpi"
+        ]
+        
+        icon_dirs.each do |dir|
+          FileUtils.mkdir_p(dir) unless Dir.exist?(dir)
+          FileUtils.cp(logo_path, File.join(dir, "ic_launcher.png"))
+        end
+        
+        UI.message("Updated Android app icon from: #{logo_path}")
+      end
+    end
   end
   
   private_lane :update_app_config do |options|
