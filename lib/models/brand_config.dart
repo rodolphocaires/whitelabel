@@ -68,11 +68,22 @@ class BrandConfig {
         titleMedium: TextStyle(color: textColor, fontFamily: fontFamily),
         titleSmall: TextStyle(color: textColor, fontFamily: fontFamily),
       ),
+      cardTheme: CardThemeData(
+        color: _darkenColor(backgroundColor, 0.1),
+        elevation: 2,
+      ),
       floatingActionButtonTheme: FloatingActionButtonThemeData(
         backgroundColor: accentColor,
         foregroundColor: textColor,
       ),
     );
+  }
+
+  // Helper method to darken a color by a given amount
+  static Color _darkenColor(Color color, double amount) {
+    final hsl = HSLColor.fromColor(color);
+    final hslDark = hsl.withLightness((hsl.lightness - amount).clamp(0.0, 1.0));
+    return hslDark.toColor();
   }
 
   static MaterialColor _createMaterialColor(Color color) {
