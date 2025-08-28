@@ -193,13 +193,29 @@ jobs:
         BRAND_ID="${{ needs.create-brand.outputs.brand_id }}"
         mkdir -p "assets/brands/$BRAND_ID"
         
-        # Create placeholder assets
-        touch "assets/brands/$BRAND_ID/logo.png"
-        touch "assets/brands/$BRAND_ID/splash_bg.png"
-        
         # Recreate brand configuration
         CONFIG_URL="${{ github.event.inputs.brand_config_url }}"
         CONFIG=$(curl -s -f "$CONFIG_URL")
+        
+        # Download actual assets from configuration
+        LOGO_URL=$(echo "$CONFIG" | jq -r '.assets.logo // empty')
+        SPLASH_URL=$(echo "$CONFIG" | jq -r '.splashScreenUrl // empty')
+        
+        # Download logo if URL is provided
+        if [ ! -z "$LOGO_URL" ] && [[ "$LOGO_URL" =~ ^https?:// ]]; then
+          echo "Downloading logo from: $LOGO_URL"
+          curl -L -o "assets/brands/$BRAND_ID/logo.png" "$LOGO_URL" || touch "assets/brands/$BRAND_ID/logo.png"
+        else
+          touch "assets/brands/$BRAND_ID/logo.png"
+        fi
+        
+        # Download splash background if URL is provided
+        if [ ! -z "$SPLASH_URL" ] && [[ "$SPLASH_URL" =~ ^https?:// ]]; then
+          echo "Downloading splash background from: $SPLASH_URL"
+          curl -L -o "assets/brands/$BRAND_ID/splash_bg.png" "$SPLASH_URL" || touch "assets/brands/$BRAND_ID/splash_bg.png"
+        else
+          touch "assets/brands/$BRAND_ID/splash_bg.png"
+        fi
         
         UPDATED_CONFIG=$(echo "$CONFIG" | jq --arg brand_id "$BRAND_ID" '
           .assets.logo = "assets/brands/\($brand_id)/" + (.assets.logo | split("/") | last) |
