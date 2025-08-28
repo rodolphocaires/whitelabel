@@ -13,13 +13,12 @@ on:
   workflow_dispatch:
     inputs:
       brand_id:
-        description: 'Brand to deploy (default, brand_a, brand_b, or all)'
+        description: 'Brand to deploy (brand_a, brand_b, or all)'
         required: true
         default: 'all'
         type: choice
         options:
           - all
-          - default
           - brand_a
           - brand_b
       build_mode:
@@ -36,7 +35,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        brand_id: ${{ github.event.inputs.brand_id == 'all' && fromJson('["default", "brand_a", "brand_b"]') || fromJson(format('["{0}"]', github.event.inputs.brand_id || 'default')) }}
+        brand_id: ${{ github.event.inputs.brand_id == 'all' && fromJson('["brand_a", "brand_b"]') || fromJson(format('["{}"]', github.event.inputs.brand_id || 'brand_a')) }}
     
     steps:
     - name: Checkout repository

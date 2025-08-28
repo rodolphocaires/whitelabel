@@ -27,11 +27,6 @@ on:
         options:
           - debug
           - release
-      deploy_to_store:
-        description: 'Deploy to app store/play store'
-        required: true
-        default: false
-        type: boolean
 
 jobs:
   deploy-ios:
@@ -68,11 +63,7 @@ jobs:
         MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
       run: |
         cd fastlane
-        if [ "${{ github.event.inputs.deploy_to_store }}" == "true" ]; then
-          bundle exec fastlane ios build_and_deploy brand_id:${{ github.event.inputs.brand_id }} build_mode:${{ github.event.inputs.build_mode }}
-        else
-          bundle exec fastlane ios deploy_brand brand_id:${{ github.event.inputs.brand_id }}
-        fi
+        bundle exec fastlane ios deploy_brand brand_id:${{ github.event.inputs.brand_id }}
 
     - name: Upload iOS build
       uses: actions/upload-artifact@v4
@@ -134,11 +125,7 @@ jobs:
         echo "$GOOGLE_PLAY_SERVICE_ACCOUNT_JSON" > fastlane/service_account.json
         
         cd fastlane
-        if [ "${{ github.event.inputs.deploy_to_store }}" == "true" ]; then
-          bundle exec fastlane android build_and_deploy brand_id:${{ github.event.inputs.brand_id }} build_mode:${{ github.event.inputs.build_mode }}
-        else
-          bundle exec fastlane android deploy_brand brand_id:${{ github.event.inputs.brand_id }}
-        fi
+        bundle exec fastlane android deploy_brand brand_id:${{ github.event.inputs.brand_id }}
 
     - name: Upload Android build
       uses: actions/upload-artifact@v4
