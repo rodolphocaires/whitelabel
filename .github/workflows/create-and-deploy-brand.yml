@@ -14,12 +14,10 @@ on:
       platform:
         description: 'Platform to deploy'
         required: true
-        default: 'both'
+        default: 'android'
         type: choice
         options:
-          - ios
           - android
-          - both
       build_mode:
         description: 'Build mode'
         required: true
