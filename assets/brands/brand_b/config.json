@@ -1,7 +1,7 @@
 {
   "brandName": "Brand B",
   "appTitle": "Brand B",
-  "splashScreenUrl": "https://picsum.photos/400/800?random=3",
+  "splashScreenUrl": "https://picsum.photos/400/800.jpg",
   "primaryColorHex": "#673AB7",
   "secondaryColorHex": "#FF9800",
   "accentColorHex": "#009688",

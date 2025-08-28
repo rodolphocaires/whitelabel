@@ -1,7 +1,7 @@
 {
   "brandName": "Brand A",
   "appTitle": "Brand A",
-  "splashScreenUrl": "https://picsum.photos/400/800?random=2",
+  "splashScreenUrl": "https://picsum.photos/400/800.jpg",
   "primaryColorHex": "#E91E63",
   "secondaryColorHex": "#FFC107",
   "accentColorHex": "#4CAF50",
@@ -9,8 +9,8 @@
   "textColorHex": "#212121",
   "fontFamily": "Roboto",
   "assets": {
-    "logo": "https://picsum.photos/200/200?random=1",
-    "splash_background": "https://picsum.photos/400/800?random=2",
-    "app_icon": "https://picsum.photos/200/200?random=1"
+    "logo": "https://picsum.photos/200/200.jpg",
+    "splash_background": "https://picsum.photos/400/800.jpg",
+    "app_icon": "https://picsum.photos/200/200.jpg"
   }
 }
