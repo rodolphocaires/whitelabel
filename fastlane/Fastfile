@@ -62,7 +62,9 @@ platform :ios do
     if Dir.exist?(brand_assets_path)
       Dir.glob("#{brand_assets_path}/*").each do |file|
         next if File.basename(file) == "config.json"
-        FileUtils.cp(file, "../assets/brands/active/")
+        next if File.directory?(file)
+        destination = File.join("../assets/brands/active", File.basename(file))
+        FileUtils.cp(file, destination)
       end
     end
     
@@ -157,7 +159,9 @@ platform :android do
     if Dir.exist?(brand_assets_path)
       Dir.glob("#{brand_assets_path}/*").each do |file|
         next if File.basename(file) == "config.json"
-        FileUtils.cp(file, "../assets/brands/active/")
+        next if File.directory?(file)
+        destination = File.join("../assets/brands/active", File.basename(file))
+        FileUtils.cp(file, destination)
       end
     end
     
