@@ -85,7 +85,7 @@ class BrandConfigService {
     return const BrandConfig(
       brandName: 'Default Brand',
       appTitle: 'White Label App',
-      splashScreenUrl: 'https://picsum.photos/400/800?random=1',
+      splashScreenUrl: 'https://picsum.photos/400/800.jpg',
       primaryColorHex: '#2196F3',
       secondaryColorHex: '#03DAC6',
       accentColorHex: '#FF5722',

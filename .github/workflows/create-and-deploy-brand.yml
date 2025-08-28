@@ -256,6 +256,12 @@ jobs:
       run: |
         echo "$GOOGLE_PLAY_SERVICE_ACCOUNT_JSON" > fastlane/service_account.json
         
+        # Debug: Show what brand files exist
+        echo "Brand files created:"
+        ls -la assets/brands/${{ needs.create-brand.outputs.brand_id }}/
+        echo "Brand config content:"
+        cat assets/brands/${{ needs.create-brand.outputs.brand_id }}/config.json
+        
         cd fastlane
         bundle exec fastlane android deploy_brand brand_id:${{ needs.create-brand.outputs.brand_id }}
 
