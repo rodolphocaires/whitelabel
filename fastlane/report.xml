@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites>
+  <testsuite name="fastlane.lanes">
+    
+    
+    
+      
+      <testcase classname="fastlane.lanes" name="0: default_platform" time="0.00016">
+        
+      </testcase>
+    
+      
+      <testcase classname="fastlane.lanes" name="1: Switch to android copy_brand_assets lane" time="6.8e-05">
+        
+      </testcase>
+    
+      
+      <testcase classname="fastlane.lanes" name="2: cp ../assets/brands/brand_a/config.json ../assets/config/active_brand.json" time="0.006838">
+        
+      </testcase>
+    
+      
+      <testcase classname="fastlane.lanes" name="3: Switch to android update_android_branding lane" time="0.000168">
+        
+      </testcase>
+    
+      
+      <testcase classname="fastlane.lanes" name="4: Switch to android update_app_config lane" time="0.000491">
+        
+      </testcase>
+    
+      
+      <testcase classname="fastlane.lanes" name="5: cd .. &amp;&amp; flutter build apk --release --dart-define=BRAND_ID=brand_a -P BRAND_PACKAGE_NAME=com.example.brand_a" time="21.116497">
+        
+      </testcase>
+    
+  </testsuite>
+</testsuites>
