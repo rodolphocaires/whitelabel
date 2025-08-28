@@ -7,7 +7,6 @@ part 'brand_config.g.dart';
 class BrandConfig {
   final String brandName;
   final String appTitle;
-  final String logoPath;
   final String splashScreenUrl;
   final String primaryColorHex;
   final String secondaryColorHex;
@@ -16,12 +15,10 @@ class BrandConfig {
   final String textColorHex;
   final String fontFamily;
   final Map<String, String> assets;
-  final Map<String, dynamic> customSettings;
 
   const BrandConfig({
     required this.brandName,
     required this.appTitle,
-    required this.logoPath,
     required this.splashScreenUrl,
     required this.primaryColorHex,
     required this.secondaryColorHex,
@@ -30,7 +27,6 @@ class BrandConfig {
     required this.textColorHex,
     this.fontFamily = 'Roboto',
     this.assets = const {},
-    this.customSettings = const {},
   });
 
   factory BrandConfig.fromJson(Map<String, dynamic> json) =>

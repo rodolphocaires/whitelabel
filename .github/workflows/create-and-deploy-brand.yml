@@ -79,12 +79,10 @@ jobs:
         APP_TITLE=$(echo "$CONFIG" | jq -r '.appTitle // empty')
         PRIMARY_COLOR=$(echo "$CONFIG" | jq -r '.primaryColorHex // empty')
         SPLASH_URL=$(echo "$CONFIG" | jq -r '.splashScreenUrl // empty')
-        API_URL=$(echo "$CONFIG" | jq -r '.customSettings.apiBaseUrl // empty')
-        SUPPORT_EMAIL=$(echo "$CONFIG" | jq -r '.customSettings.supportEmail // empty')
         
-        if [ -z "$BRAND_NAME" ] || [ -z "$APP_TITLE" ] || [ -z "$PRIMARY_COLOR" ] || [ -z "$SPLASH_URL" ] || [ -z "$API_URL" ] || [ -z "$SUPPORT_EMAIL" ]; then
+        if [ -z "$BRAND_NAME" ] || [ -z "$APP_TITLE" ] || [ -z "$PRIMARY_COLOR" ] || [ -z "$SPLASH_URL" ]; then
           echo "❌ Missing required fields in configuration"
-          echo "Required: brandName, appTitle, primaryColorHex, splashScreenUrl, customSettings.apiBaseUrl, customSettings.supportEmail"
+          echo "Required: brandName, appTitle, primaryColorHex, splashScreenUrl"
           exit 1
         fi
         
@@ -111,8 +109,6 @@ jobs:
         echo "APP_TITLE=$APP_TITLE" >> $GITHUB_OUTPUT
         echo "PRIMARY_COLOR=$PRIMARY_COLOR" >> $GITHUB_OUTPUT
         echo "SPLASH_URL=$SPLASH_URL" >> $GITHUB_OUTPUT
-        echo "API_URL=$API_URL" >> $GITHUB_OUTPUT
-        echo "SUPPORT_EMAIL=$SUPPORT_EMAIL" >> $GITHUB_OUTPUT
 
     - name: Create brand directory structure
       run: |
@@ -136,8 +132,7 @@ jobs:
         
         # Update asset paths to include the brand ID
         UPDATED_CONFIG=$(echo "$CONFIG" | jq --arg brand_id "$BRAND_ID" '
-          .logoPath = "assets/brands/\($brand_id)/" + (.logoPath // "logo.png") |
-          .assets.logo = "assets/brands/\($brand_id)/" + (.logoPath // "logo.png") |
+          .assets.logo = "assets/brands/\($brand_id)/" + (.assets.logo | split("/") | last) |
           .assets.splash_background = "assets/brands/\($brand_id)/splash_bg.png" |
           .assets.app_icon = "assets/brands/\($brand_id)/logo.png"
         ')
@@ -171,14 +166,13 @@ jobs:
         git add "assets/brands/$BRAND_ID/"
         git add "pubspec.yaml"
         
-        git commit -m "🎨 Add new brand: ${{ github.event.inputs.brand_name }} ($BRAND_ID)
+        git commit -m "🎨 Add new brand: ${{ steps.parse_config.outputs.BRAND_NAME }} ($BRAND_ID)
 
         Brand Configuration:
-        - Brand Name: ${{ github.event.inputs.brand_name }}
-        - App Title: ${{ github.event.inputs.app_title }}
-        - Primary Color: ${{ github.event.inputs.primary_color }}
-        - API Base URL: ${{ github.event.inputs.api_base_url }}
-        - Support Email: ${{ github.event.inputs.support_email }}
+        - Brand Name: ${{ steps.parse_config.outputs.BRAND_NAME }}
+        - App Title: ${{ steps.parse_config.outputs.APP_TITLE }}
+        - Primary Color: ${{ steps.parse_config.outputs.PRIMARY_COLOR }}
+        - Splash Screen URL: ${{ steps.parse_config.outputs.SPLASH_URL }}
         
         Created via GitHub Actions workflow"
         
@@ -195,8 +189,6 @@ jobs:
         echo "App Title: ${{ steps.parse_config.outputs.APP_TITLE }}"
         echo "Primary Color: ${{ steps.parse_config.outputs.PRIMARY_COLOR }}"
         echo "Splash Screen URL: ${{ steps.parse_config.outputs.SPLASH_URL }}"
-        echo "API Base URL: ${{ steps.parse_config.outputs.API_URL }}"
-        echo "Support Email: ${{ steps.parse_config.outputs.SUPPORT_EMAIL }}"
         echo "Platform: ${{ github.event.inputs.platform }}"
         echo "Build Mode: ${{ github.event.inputs.build_mode }}"
 

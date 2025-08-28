@@ -53,7 +53,7 @@ Each brand is defined by a JSON configuration file containing:
 {
   "brandName": "Brand A",
   "appTitle": "Brand A Mobile",
-  "logoPath": "assets/brands/brand_a/logo.png",
+  "splashScreenUrl": "https://picsum.photos/400/800?random=2",
   "primaryColorHex": "#E91E63",
   "secondaryColorHex": "#FFC107",
   "accentColorHex": "#4CAF50",
@@ -61,17 +61,18 @@ Each brand is defined by a JSON configuration file containing:
   "textColorHex": "#212121",
   "fontFamily": "Roboto",
   "assets": {
-    "logo": "assets/brands/brand_a/logo.png",
-    "splash_background": "assets/brands/brand_a/splash_bg.png",
-    "app_icon": "assets/brands/brand_a/logo.png"
-  },
-  "customSettings": {
-    "enableAnalytics": true,
-    "apiBaseUrl": "https://api.branda.com",
-    "supportEmail": "support@branda.com"
+    "logo": "https://picsum.photos/200/200?random=1",
+    "splash_background": "https://picsum.photos/400/800?random=2",
+    "app_icon": "https://picsum.photos/200/200?random=1"
   }
 }
 ```
+
+**Asset URLs**: The `assets` object supports both local file paths and remote URLs:
+- **Local assets**: `"logo": "assets/brands/brand_a/logo.png"`
+- **Remote URLs**: `"logo": "https://example.com/logo.png"`
+
+The system automatically detects URLs (starting with `http://` or `https://`) and loads them using `Image.network()` with proper error handling and loading states.
 
 ## Getting Started
 

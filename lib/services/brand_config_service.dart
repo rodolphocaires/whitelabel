@@ -77,7 +77,7 @@ class BrandConfigService {
         'Brand configuration not loaded. Call initialize() first.',
       );
     }
-    return config.logoPath;
+    return config.assets['logo'] ?? 'assets/brands/default/logo.png';
   }
 
   /// Create a fallback configuration when all else fails
@@ -85,7 +85,6 @@ class BrandConfigService {
     return const BrandConfig(
       brandName: 'Default Brand',
       appTitle: 'White Label App',
-      logoPath: 'assets/brands/default/logo.png',
       splashScreenUrl: 'https://picsum.photos/400/800?random=1',
       primaryColorHex: '#2196F3',
       secondaryColorHex: '#03DAC6',
@@ -94,7 +93,6 @@ class BrandConfigService {
       textColorHex: '#000000',
       fontFamily: 'Roboto',
       assets: {},
-      customSettings: {},
     );
   }
 

@@ -1,7 +1,6 @@
 {
   "brandName": "Default Brand",
   "appTitle": "White Label App",
-  "logoPath": "assets/brands/default/logo.png",
   "splashScreenUrl": "https://picsum.photos/400/800?random=1",
   "primaryColorHex": "#2196F3",
   "secondaryColorHex": "#03DAC6",
@@ -13,12 +12,5 @@
     "logo": "assets/brands/default/logo.png",
     "splash_background": "assets/brands/default/splash_bg.png",
     "app_icon": "assets/brands/default/logo.png"
-  },
-  "customSettings": {
-    "enableAnalytics": true,
-    "apiBaseUrl": "https://api.defaultbrand.com",
-    "supportEmail": "support@defaultbrand.com",
-    "termsUrl": "https://defaultbrand.com/terms",
-    "privacyUrl": "https://defaultbrand.com/privacy"
   }
 }
