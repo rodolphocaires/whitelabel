@@ -1,0 +1,428 @@
+name: Create and Deploy New Brand
+
+on:
+  workflow_dispatch:
+    inputs:
+      # Brand Identity
+      brand_id:
+        description: 'Brand ID (unique identifier, lowercase, no spaces)'
+        required: true
+        type: string
+      brand_name:
+        description: 'Brand Name (display name)'
+        required: true
+        type: string
+      app_title:
+        description: 'App Title (shown in app stores)'
+        required: true
+        type: string
+      
+      # Visual Assets
+      logo_path:
+        description: 'Logo Path (relative to assets/brands/[brand_id]/)'
+        required: false
+        default: 'logo.png'
+        type: string
+      splash_screen_url:
+        description: 'Splash Screen Image URL'
+        required: true
+        type: string
+      
+      # Color Scheme (hex colors with #)
+      primary_color:
+        description: 'Primary Color (hex, e.g., #E91E63)'
+        required: true
+        type: string
+      secondary_color:
+        description: 'Secondary Color (hex, e.g., #FFC107)'
+        required: true
+        type: string
+      accent_color:
+        description: 'Accent Color (hex, e.g., #4CAF50)'
+        required: true
+        type: string
+      background_color:
+        description: 'Background Color (hex, e.g., #FFFFFF)'
+        required: false
+        default: '#FFFFFF'
+        type: string
+      text_color:
+        description: 'Text Color (hex, e.g., #000000)'
+        required: false
+        default: '#000000'
+        type: string
+      
+      # Typography
+      font_family:
+        description: 'Font Family'
+        required: false
+        default: 'Roboto'
+        type: string
+      
+      # Custom Settings
+      enable_analytics:
+        description: 'Enable Analytics'
+        required: false
+        default: true
+        type: boolean
+      api_base_url:
+        description: 'API Base URL'
+        required: true
+        type: string
+      support_email:
+        description: 'Support Email'
+        required: true
+        type: string
+      terms_url:
+        description: 'Terms of Service URL'
+        required: false
+        type: string
+      privacy_url:
+        description: 'Privacy Policy URL'
+        required: false
+        type: string
+      show_welcome_screen:
+        description: 'Show Welcome Screen'
+        required: false
+        default: true
+        type: boolean
+      max_retries:
+        description: 'Maximum API Retries'
+        required: false
+        default: '3'
+        type: string
+      enable_dark_mode:
+        description: 'Enable Dark Mode'
+        required: false
+        default: false
+        type: boolean
+      
+      # Deployment Options
+      platform:
+        description: 'Platform to deploy'
+        required: true
+        default: 'both'
+        type: choice
+        options:
+          - ios
+          - android
+          - both
+      build_mode:
+        description: 'Build mode'
+        required: true
+        default: 'release'
+        type: choice
+        options:
+          - debug
+          - release
+      deploy_to_store:
+        description: 'Deploy to app store/play store'
+        required: false
+        default: false
+        type: boolean
+
+jobs:
+  create-brand:
+    runs-on: ubuntu-latest
+    outputs:
+      brand_id: ${{ github.event.inputs.brand_id }}
+      
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Validate brand ID
+      run: |
+        BRAND_ID="${{ github.event.inputs.brand_id }}"
+        if [[ ! "$BRAND_ID" =~ ^[a-z0-9_]+$ ]]; then
+          echo "❌ Brand ID must be lowercase letters, numbers, and underscores only"
+          exit 1
+        fi
+        if [ -d "assets/brands/$BRAND_ID" ]; then
+          echo "❌ Brand ID '$BRAND_ID' already exists"
+          exit 1
+        fi
+        echo "✅ Brand ID '$BRAND_ID' is valid"
+
+    - name: Validate color formats
+      run: |
+        colors=(
+          "${{ github.event.inputs.primary_color }}"
+          "${{ github.event.inputs.secondary_color }}"
+          "${{ github.event.inputs.accent_color }}"
+          "${{ github.event.inputs.background_color }}"
+          "${{ github.event.inputs.text_color }}"
+        )
+        
+        for color in "${colors[@]}"; do
+          if [[ ! "$color" =~ ^#[0-9A-Fa-f]{6}$ ]]; then
+            echo "❌ Invalid color format: $color (must be #RRGGBB)"
+            exit 1
+          fi
+        done
+        echo "✅ All colors are valid hex format"
+
+    - name: Create brand directory structure
+      run: |
+        BRAND_ID="${{ github.event.inputs.brand_id }}"
+        mkdir -p "assets/brands/$BRAND_ID"
+        
+        # Create placeholder assets
+        touch "assets/brands/$BRAND_ID/logo.png"
+        touch "assets/brands/$BRAND_ID/splash_bg.png"
+        touch "assets/brands/$BRAND_ID/app_icon.png"
+        
+        echo "✅ Created brand directory structure for $BRAND_ID"
+
+    - name: Generate brand configuration
+      run: |
+        BRAND_ID="${{ github.event.inputs.brand_id }}"
+        CONFIG_FILE="assets/brands/$BRAND_ID/config.json"
+        
+        # Build custom settings JSON
+        CUSTOM_SETTINGS=$(cat << 'EOF'
+        {
+          "enableAnalytics": ${{ github.event.inputs.enable_analytics }},
+          "apiBaseUrl": "${{ github.event.inputs.api_base_url }}",
+          "supportEmail": "${{ github.event.inputs.support_email }}",
+          "termsUrl": "${{ github.event.inputs.terms_url }}",
+          "privacyUrl": "${{ github.event.inputs.privacy_url }}",
+          "showWelcomeScreen": ${{ github.event.inputs.show_welcome_screen }},
+          "maxRetries": ${{ github.event.inputs.max_retries }},
+          "enableDarkMode": ${{ github.event.inputs.enable_dark_mode }}
+        }
+        EOF
+        )
+        
+        # Generate complete brand configuration
+        cat > "$CONFIG_FILE" << EOF
+        {
+          "brandName": "${{ github.event.inputs.brand_name }}",
+          "appTitle": "${{ github.event.inputs.app_title }}",
+          "logoPath": "assets/brands/$BRAND_ID/${{ github.event.inputs.logo_path }}",
+          "splashScreenUrl": "${{ github.event.inputs.splash_screen_url }}",
+          "primaryColorHex": "${{ github.event.inputs.primary_color }}",
+          "secondaryColorHex": "${{ github.event.inputs.secondary_color }}",
+          "accentColorHex": "${{ github.event.inputs.accent_color }}",
+          "backgroundColorHex": "${{ github.event.inputs.background_color }}",
+          "textColorHex": "${{ github.event.inputs.text_color }}",
+          "fontFamily": "${{ github.event.inputs.font_family }}",
+          "assets": {
+            "logo": "assets/brands/$BRAND_ID/${{ github.event.inputs.logo_path }}",
+            "splash_background": "assets/brands/$BRAND_ID/splash_bg.png",
+            "app_icon": "assets/brands/$BRAND_ID/app_icon.png"
+          },
+          "customSettings": $CUSTOM_SETTINGS
+        }
+        EOF
+        
+        echo "✅ Generated brand configuration:"
+        cat "$CONFIG_FILE" | jq '.'
+
+    - name: Update pubspec.yaml with new brand assets
+      run: |
+        BRAND_ID="${{ github.event.inputs.brand_id }}"
+        
+        # Check if brand assets path already exists in pubspec.yaml
+        if ! grep -q "assets/brands/$BRAND_ID/" pubspec.yaml; then
+          # Add new brand assets path
+          sed -i "/- assets\/brands\/active\//a\\    - assets/brands/$BRAND_ID/" pubspec.yaml
+          echo "✅ Added $BRAND_ID assets to pubspec.yaml"
+        else
+          echo "ℹ️ Brand assets already in pubspec.yaml"
+        fi
+
+    - name: Commit new brand configuration
+      run: |
+        BRAND_ID="${{ github.event.inputs.brand_id }}"
+        
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        
+        git add "assets/brands/$BRAND_ID/"
+        git add "pubspec.yaml"
+        
+        git commit -m "🎨 Add new brand: ${{ github.event.inputs.brand_name }} ($BRAND_ID)
+
+        Brand Configuration:
+        - Brand Name: ${{ github.event.inputs.brand_name }}
+        - App Title: ${{ github.event.inputs.app_title }}
+        - Primary Color: ${{ github.event.inputs.primary_color }}
+        - API Base URL: ${{ github.event.inputs.api_base_url }}
+        - Support Email: ${{ github.event.inputs.support_email }}
+        
+        Created via GitHub Actions workflow"
+        
+        git push
+        
+        echo "✅ Committed and pushed new brand configuration"
+
+    - name: Display brand summary
+      run: |
+        echo "🎉 Brand Creation Summary"
+        echo "========================"
+        echo "Brand ID: ${{ github.event.inputs.brand_id }}"
+        echo "Brand Name: ${{ github.event.inputs.brand_name }}"
+        echo "App Title: ${{ github.event.inputs.app_title }}"
+        echo "Primary Color: ${{ github.event.inputs.primary_color }}"
+        echo "Secondary Color: ${{ github.event.inputs.secondary_color }}"
+        echo "Splash Screen URL: ${{ github.event.inputs.splash_screen_url }}"
+        echo "API Base URL: ${{ github.event.inputs.api_base_url }}"
+        echo "Support Email: ${{ github.event.inputs.support_email }}"
+        echo "Platform: ${{ github.event.inputs.platform }}"
+        echo "Build Mode: ${{ github.event.inputs.build_mode }}"
+
+  deploy-ios:
+    if: ${{ github.event.inputs.platform == 'ios' || github.event.inputs.platform == 'both' }}
+    needs: create-brand
+    runs-on: macos-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        ref: ${{ github.ref }}
+
+    - name: Pull latest changes
+      run: git pull origin ${{ github.ref_name }}
+
+    - name: Setup Flutter
+      uses: subosito/flutter-action@v2
+      with:
+        flutter-version: '3.24.0'
+        channel: 'stable'
+
+    - name: Setup Ruby
+      uses: ruby/setup-ruby@v1
+      with:
+        ruby-version: '3.0'
+        bundler-cache: true
+        working-directory: fastlane
+
+    - name: Install dependencies
+      run: |
+        flutter pub get
+        dart run build_runner build --delete-conflicting-outputs
+
+    - name: Deploy iOS - ${{ needs.create-brand.outputs.brand_id }}
+      env:
+        FASTLANE_APPLE_APPLICATION_SPECIFIC_PASSWORD: ${{ secrets.FASTLANE_APPLE_APPLICATION_SPECIFIC_PASSWORD }}
+        FASTLANE_SESSION: ${{ secrets.FASTLANE_SESSION }}
+        FASTLANE_USER: ${{ secrets.FASTLANE_USER }}
+        MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
+      run: |
+        cd fastlane
+        if [ "${{ github.event.inputs.deploy_to_store }}" == "true" ]; then
+          bundle exec fastlane ios build_and_deploy brand_id:${{ needs.create-brand.outputs.brand_id }} build_mode:${{ github.event.inputs.build_mode }}
+        else
+          bundle exec fastlane ios deploy_brand brand_id:${{ needs.create-brand.outputs.brand_id }}
+        fi
+
+    - name: Upload iOS artifacts
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: ios-${{ needs.create-brand.outputs.brand_id }}-${{ github.event.inputs.build_mode }}
+        path: |
+          build/ios/iphoneos/*.app
+          build/ios/iphoneos/*.ipa
+        retention-days: 30
+
+  deploy-android:
+    if: ${{ github.event.inputs.platform == 'android' || github.event.inputs.platform == 'both' }}
+    needs: create-brand
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        ref: ${{ github.ref }}
+
+    - name: Pull latest changes
+      run: git pull origin ${{ github.ref_name }}
+
+    - name: Setup Java
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'zulu'
+        java-version: '17'
+
+    - name: Setup Flutter
+      uses: subosito/flutter-action@v2
+      with:
+        flutter-version: '3.24.0'
+        channel: 'stable'
+
+    - name: Setup Ruby
+      uses: ruby/setup-ruby@v1
+      with:
+        ruby-version: '3.0'
+        bundler-cache: true
+        working-directory: fastlane
+
+    - name: Install dependencies
+      run: |
+        flutter pub get
+        dart run build_runner build --delete-conflicting-outputs
+
+    - name: Setup Android signing
+      env:
+        ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+        ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+        ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+        ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+      run: |
+        echo "$ANDROID_KEYSTORE_BASE64" | base64 --decode > android/app/keystore.jks
+        cat > android/key.properties << EOF
+        storePassword=$ANDROID_KEYSTORE_PASSWORD
+        keyPassword=$ANDROID_KEY_PASSWORD
+        keyAlias=$ANDROID_KEY_ALIAS
+        storeFile=keystore.jks
+        EOF
+
+    - name: Deploy Android - ${{ needs.create-brand.outputs.brand_id }}
+      env:
+        GOOGLE_PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
+      run: |
+        echo "$GOOGLE_PLAY_SERVICE_ACCOUNT_JSON" > fastlane/service_account.json
+        
+        cd fastlane
+        if [ "${{ github.event.inputs.deploy_to_store }}" == "true" ]; then
+          bundle exec fastlane android build_and_deploy brand_id:${{ needs.create-brand.outputs.brand_id }} build_mode:${{ github.event.inputs.build_mode }}
+        else
+          bundle exec fastlane android deploy_brand brand_id:${{ needs.create-brand.outputs.brand_id }}
+        fi
+
+    - name: Upload Android artifacts
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: android-${{ needs.create-brand.outputs.brand_id }}-${{ github.event.inputs.build_mode }}
+        path: |
+          build/app/outputs/flutter-apk/*.apk
+          build/app/outputs/bundle/release/*.aab
+        retention-days: 30
+
+  summary:
+    needs: [create-brand, deploy-ios, deploy-android]
+    if: always()
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Deployment Summary
+      run: |
+        echo "🎉 Brand Creation and Deployment Complete!"
+        echo "=========================================="
+        echo "Brand ID: ${{ needs.create-brand.outputs.brand_id }}"
+        echo "Brand Name: ${{ github.event.inputs.brand_name }}"
+        echo "App Title: ${{ github.event.inputs.app_title }}"
+        echo ""
+        echo "Deployment Status:"
+        echo "- iOS: ${{ needs.deploy-ios.result || 'Skipped' }}"
+        echo "- Android: ${{ needs.deploy-android.result || 'Skipped' }}"
+        echo ""
+        echo "Configuration committed to repository ✅"
+        echo "Build artifacts uploaded ✅"
