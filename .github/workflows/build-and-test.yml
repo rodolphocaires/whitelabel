@@ -36,7 +36,7 @@ jobs:
       run: flutter analyze
 
     - name: Check formatting
-      run: dart format --set-exit-if-changed .
+      run: dart format --output=none --set-exit-if-changed .
 
     - name: Build APK - ${{ matrix.brand_id }}
       run: flutter build apk --debug --dart-define=BRAND_ID=${{ matrix.brand_id }}
