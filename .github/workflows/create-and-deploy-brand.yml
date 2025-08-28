@@ -7,10 +7,10 @@ on:
         description: 'Brand ID (unique identifier, lowercase, no spaces)'
         required: true
         type: string
-      brand_config_file:
-        description: 'Upload brand configuration JSON file'
+      brand_config_url:
+        description: 'URL to brand configuration JSON file'
         required: true
-        type: file
+        type: string
       platform:
         description: 'Platform to deploy'
         required: true
@@ -55,20 +55,25 @@ jobs:
         fi
         echo "✅ Brand ID '$BRAND_ID' is valid"
         
-        # Read uploaded brand configuration file
-        CONFIG_FILE="${{ github.event.inputs.brand_config_file }}"
-        echo "Reading brand configuration from uploaded file: $CONFIG_FILE"
+        # Fetch brand configuration from URL
+        CONFIG_URL="${{ github.event.inputs.brand_config_url }}"
+        echo "Fetching brand configuration from URL: $CONFIG_URL"
         
-        # Validate file exists and is readable
-        if [ ! -f "$CONFIG_FILE" ]; then
-          echo "❌ Brand configuration file not found: $CONFIG_FILE"
+        # Validate URL format
+        if [[ ! "$CONFIG_URL" =~ ^https?:// ]]; then
+          echo "❌ Invalid URL format. Must start with http:// or https://"
           exit 1
         fi
         
-        # Read and validate JSON format
-        CONFIG=$(cat "$CONFIG_FILE")
+        # Fetch and validate JSON format
+        CONFIG=$(curl -s -f "$CONFIG_URL")
+        if [ $? -ne 0 ] || [ -z "$CONFIG" ]; then
+          echo "❌ Failed to fetch configuration from URL: $CONFIG_URL"
+          exit 1
+        fi
+        
         if ! echo "$CONFIG" | jq . > /dev/null 2>&1; then
-          echo "❌ Invalid JSON format in brand configuration file"
+          echo "❌ Invalid JSON format in brand configuration from URL"
           exit 1
         fi
         
@@ -124,9 +129,9 @@ jobs:
         BRAND_ID="${{ github.event.inputs.brand_id }}"
         OUTPUT_CONFIG_FILE="assets/brands/$BRAND_ID/config.json"
         
-        # Read the uploaded JSON configuration file
-        UPLOADED_CONFIG_FILE="${{ github.event.inputs.brand_config_file }}"
-        CONFIG=$(cat "$UPLOADED_CONFIG_FILE")
+        # Fetch the JSON configuration from URL
+        CONFIG_URL="${{ github.event.inputs.brand_config_url }}"
+        CONFIG=$(curl -s -f "$CONFIG_URL")
         
         # Update asset paths to include the brand ID
         UPDATED_CONFIG=$(echo "$CONFIG" | jq --arg brand_id "$BRAND_ID" '
