@@ -35,7 +35,7 @@ jobs:
     runs-on: macos-latest
     strategy:
       matrix:
-        brand_id: ${{ github.event.inputs.brand_id == 'all' && fromJson('["brand_a", "brand_b"]') || fromJson(format('["{}"]', github.event.inputs.brand_id || 'brand_a')) }}
+        brand_id: ${{ github.event.inputs.brand_id == 'all' && fromJson('["brand_a", "brand_b"]') || fromJson(format('["{0}"]', github.event.inputs.brand_id || 'brand_a')) }}
     
     steps:
     - name: Checkout repository
