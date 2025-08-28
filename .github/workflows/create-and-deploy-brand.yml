@@ -209,6 +209,9 @@ jobs:
         
         echo "$UPDATED_CONFIG" | jq '.' > "assets/brands/$BRAND_ID/config.json"
         
+        # Also copy to active_brand.json so the app can find it
+        echo "$UPDATED_CONFIG" | jq '.' > "assets/config/active_brand.json"
+        
         # Temporarily update pubspec.yaml
         cp pubspec.yaml pubspec.yaml.backup
         if ! grep -q "assets/brands/$BRAND_ID/" pubspec.yaml; then

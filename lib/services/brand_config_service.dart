@@ -45,6 +45,21 @@ class BrandConfigService {
     }
   }
 
+  /// Initialize the brand configuration service from active_brand.json
+  /// This is used when deploying custom brands via workflow
+  static Future<void> initializeFromActive() async {
+    try {
+      const String configPath = 'assets/config/active_brand.json';
+      final String configString = await rootBundle.loadString(configPath);
+      final Map<String, dynamic> configJson = json.decode(configString);
+      
+      _currentConfig = BrandConfig.fromJson(configJson);
+    } catch (e) {
+      debugPrint('Failed to load active brand config, falling back to default: $e');
+      await initialize(); // Load default
+    }
+  }
+
   /// Initialize the brand configuration service
   /// This should be called early in the app lifecycle
   static Future<void> initialize([String? brandId]) async {

@@ -13,7 +13,13 @@ void main() async {
   );
 
   // Initialize brand configuration at build time
-  await BrandConfigService.initialize(brandId);
+  // For custom brands deployed via workflow, use active_brand.json
+  // For default/development, use the specific brand configuration
+  if (brandId != 'default') {
+    await BrandConfigService.initializeFromActive();
+  } else {
+    await BrandConfigService.initialize(brandId);
+  }
 
   runApp(const WhiteLabelApp());
 }
