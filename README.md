@@ -8,7 +8,6 @@ A Flutter application designed for white labeling with dynamic theming and asset
 - **Theme Management**: Automatic theme generation from brand colors
 - **Asset Management**: Brand-specific assets and logos
 - **Fastlane Integration**: Automated deployment pipeline for different brands
-- **Runtime Brand Switching**: Switch between brands for testing (development only)
 
 ## Project Structure
 
@@ -19,8 +18,6 @@ lib/
 │   └── brand_config.g.dart    # Generated JSON serialization
 ├── services/
 │   └── brand_config_service.dart # Brand configuration service
-├── utils/
-│   └── brand_switcher.dart    # Brand switching utility
 └── main.dart                  # Main application entry point
 
 assets/
@@ -45,7 +42,6 @@ Each brand is defined by a JSON configuration file containing:
 - **Colors**: Primary, secondary, accent, background, text colors (hex format)
 - **Typography**: Font family
 - **Assets**: Brand-specific asset paths
-- **Custom Settings**: API URLs, feature flags, etc.
 
 ### Example Brand Configuration
 
@@ -101,29 +97,12 @@ flutter run
 ```
 
 #### Specific Brand (Development)
-Modify the `main()` function in `lib/main.dart`:
-```dart
-await BrandConfigService.initialize('brand_a'); // or 'brand_b'
+Use the VS Code launch configurations or set the BRAND_ID environment variable:
+```bash
+flutter run --dart-define=BRAND_ID=brand_a
 ```
-
-### Brand Switching (Development)
-
-The app includes a brand switcher widget for testing different configurations in development mode. Use the chips at the top of the app to switch between brands.
 
 ## Deployment with Fastlane
-
-### iOS Deployment
-
-Deploy a specific brand to iOS:
-```bash
-cd fastlane
-fastlane ios deploy_brand brand_id:brand_a
-```
-
-Build and deploy:
-```bash
-fastlane ios build_and_deploy brand_id:brand_a
-```
 
 ### Android Deployment
 
@@ -143,8 +122,7 @@ fastlane android build_and_deploy brand_id:brand_a
 1. Create a new directory under `assets/brands/` (e.g., `brand_c/`)
 2. Add the brand configuration file: `assets/brands/brand_c/config.json`
 3. Add brand-specific assets (logo, splash screen, app icon)
-4. Update the `BrandSwitcher.availableBrands` list in `lib/utils/brand_switcher.dart`
-5. Deploy using Fastlane
+4. Deploy using Fastlane or GitHub Actions
 
 ## Customization
 
@@ -156,26 +134,52 @@ The `BrandConfig` class automatically generates Flutter `ThemeData` from the bra
 
 Brand-specific assets are managed through the `assets` map in the brand configuration. The `BrandConfigService.getAssetPath()` method provides access to these assets.
 
-### Custom Settings
-
-Use the `customSettings` map in brand configurations to store brand-specific feature flags, API endpoints, and other configuration values.
 
 ## Development Notes
 
 - The app uses JSON serialization with `json_annotation` and `build_runner`
 - Brand configurations are loaded at app startup
-- The brand switcher is only intended for development/testing
 - Fastlane handles asset copying and platform-specific configurations
 - Asset directory lint warnings can be ignored as directories are created programmatically
+
+## GitHub Actions Pipelines
+
+### Create and Deploy New Brand
+
+The repository includes a GitHub Actions workflow for creating and deploying new brands automatically:
+
+1. **Go to Actions tab** in your GitHub repository
+2. **Select "Create and Deploy New Brand"** workflow
+3. **Fill in the parameters**:
+   - **Brand ID**: Unique identifier (lowercase, no spaces)
+   - **Brand Config URL**: URL to your JSON configuration file
+   - **Platform**: Android (default)
+   - **Build Mode**: Release or Debug
+
+#### Example Usage
+
+1. Host your brand configuration JSON file (e.g., on GitHub raw, CDN, or any public URL)
+2. Run the workflow with the URL: `https://raw.githubusercontent.com/user/repo/main/config.json`
+3. The pipeline will:
+   - Validate the configuration
+   - Create the brand directory structure
+   - Generate the brand configuration file
+   - Deploy to Android
+   - Upload build artifacts
+
+### Manual Deployment
+
+You can also trigger deployments manually using the existing workflows:
+- **Build and Test**: Runs tests and builds the app
+- **Deploy Android**: Deploys a specific brand to Android
 
 ## Production Deployment
 
 For production deployments:
 
-1. Remove or disable the brand switcher widget
-2. Set the specific brand ID in the `main()` function
-3. Use Fastlane to deploy with the appropriate brand configuration
-4. Ensure all brand assets are properly sized for their target platforms
+1. Set the specific brand ID using environment variables
+2. Use GitHub Actions or Fastlane to deploy with the appropriate brand configuration
+3. Ensure all brand assets are properly sized for their target platforms
 
 ## Contributing
 

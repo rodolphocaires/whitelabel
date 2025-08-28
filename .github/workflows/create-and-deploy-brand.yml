@@ -113,7 +113,7 @@ jobs:
         echo "PRIMARY_COLOR=$PRIMARY_COLOR" >> $GITHUB_OUTPUT
         echo "SPLASH_URL=$SPLASH_URL" >> $GITHUB_OUTPUT
 
-    - name: Create brand directory structure
+    - name: Create temporary brand directory structure
       run: |
         BRAND_ID="${{ github.event.inputs.brand_id }}"
         mkdir -p "assets/brands/$BRAND_ID"
@@ -122,9 +122,9 @@ jobs:
         touch "assets/brands/$BRAND_ID/logo.png"
         touch "assets/brands/$BRAND_ID/splash_bg.png"
         
-        echo "✅ Created brand directory structure for $BRAND_ID"
+        echo "✅ Created temporary brand directory structure for $BRAND_ID"
 
-    - name: Generate brand configuration
+    - name: Generate temporary brand configuration
       run: |
         BRAND_ID="${{ github.event.inputs.brand_id }}"
         OUTPUT_CONFIG_FILE="assets/brands/$BRAND_ID/config.json"
@@ -143,45 +143,24 @@ jobs:
         # Write the configuration to file
         echo "$UPDATED_CONFIG" | jq '.' > "$OUTPUT_CONFIG_FILE"
         
-        echo "✅ Generated brand configuration:"
+        echo "✅ Generated temporary brand configuration:"
         cat "$OUTPUT_CONFIG_FILE" | jq '.'
 
-    - name: Update pubspec.yaml with new brand assets
+    - name: Update pubspec.yaml temporarily
       run: |
         BRAND_ID="${{ github.event.inputs.brand_id }}"
+        
+        # Create a backup of original pubspec.yaml
+        cp pubspec.yaml pubspec.yaml.backup
         
         # Check if brand assets path already exists in pubspec.yaml
         if ! grep -q "assets/brands/$BRAND_ID/" pubspec.yaml; then
           # Add new brand assets path
           sed -i "/- assets\/brands\/active\//a\\    - assets/brands/$BRAND_ID/" pubspec.yaml
-          echo "✅ Added $BRAND_ID assets to pubspec.yaml"
+          echo "✅ Temporarily added $BRAND_ID assets to pubspec.yaml"
         else
           echo "ℹ️ Brand assets already in pubspec.yaml"
         fi
-
-    - name: Commit new brand configuration
-      run: |
-        BRAND_ID="${{ github.event.inputs.brand_id }}"
-        
-        git config --local user.email "action@github.com"
-        git config --local user.name "GitHub Action"
-        
-        git add "assets/brands/$BRAND_ID/"
-        git add "pubspec.yaml"
-        
-        git commit -m "🎨 Add new brand: ${{ steps.parse_config.outputs.BRAND_NAME }} ($BRAND_ID)
-
-        Brand Configuration:
-        - Brand Name: ${{ steps.parse_config.outputs.BRAND_NAME }}
-        - App Title: ${{ steps.parse_config.outputs.APP_TITLE }}
-        - Primary Color: ${{ steps.parse_config.outputs.PRIMARY_COLOR }}
-        - Splash Screen URL: ${{ steps.parse_config.outputs.SPLASH_URL }}
-        
-        Created via GitHub Actions workflow"
-        
-        git push
-        
-        echo "✅ Committed and pushed new brand configuration"
 
     - name: Display brand summary
       run: |
@@ -202,17 +181,41 @@ jobs:
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
-      with:
-        ref: ${{ github.ref }}
-
-    - name: Pull latest changes
-      run: git pull origin ${{ github.ref_name }}
 
     - name: Setup Java
       uses: actions/setup-java@v4
       with:
         distribution: 'zulu'
         java-version: '17'
+
+    - name: Recreate temporary brand files
+      run: |
+        BRAND_ID="${{ needs.create-brand.outputs.brand_id }}"
+        mkdir -p "assets/brands/$BRAND_ID"
+        
+        # Create placeholder assets
+        touch "assets/brands/$BRAND_ID/logo.png"
+        touch "assets/brands/$BRAND_ID/splash_bg.png"
+        
+        # Recreate brand configuration
+        CONFIG_URL="${{ github.event.inputs.brand_config_url }}"
+        CONFIG=$(curl -s -f "$CONFIG_URL")
+        
+        UPDATED_CONFIG=$(echo "$CONFIG" | jq --arg brand_id "$BRAND_ID" '
+          .assets.logo = "assets/brands/\($brand_id)/" + (.assets.logo | split("/") | last) |
+          .assets.splash_background = "assets/brands/\($brand_id)/splash_bg.png" |
+          .assets.app_icon = "assets/brands/\($brand_id)/logo.png"
+        ')
+        
+        echo "$UPDATED_CONFIG" | jq '.' > "assets/brands/$BRAND_ID/config.json"
+        
+        # Temporarily update pubspec.yaml
+        cp pubspec.yaml pubspec.yaml.backup
+        if ! grep -q "assets/brands/$BRAND_ID/" pubspec.yaml; then
+          sed -i "/- assets\/brands\/active\//a\\    - assets/brands/$BRAND_ID/" pubspec.yaml
+        fi
+        
+        echo "✅ Recreated temporary brand files for deployment"
 
     - name: Setup Flutter
       uses: subosito/flutter-action@v2
@@ -266,6 +269,22 @@ jobs:
           build/app/outputs/bundle/release/*.aab
         retention-days: 30
 
+    - name: Cleanup temporary files
+      if: always()
+      run: |
+        BRAND_ID="${{ needs.create-brand.outputs.brand_id }}"
+        
+        # Remove temporary brand directory
+        rm -rf "assets/brands/$BRAND_ID"
+        
+        # Restore original pubspec.yaml if backup exists
+        if [ -f "pubspec.yaml.backup" ]; then
+          mv pubspec.yaml.backup pubspec.yaml
+          echo "✅ Restored original pubspec.yaml"
+        fi
+        
+        echo "✅ Cleaned up temporary brand files"
+
   summary:
     needs: [create-brand, deploy-android]
     if: always()
@@ -283,5 +302,6 @@ jobs:
         echo "Deployment Status:"
         echo "- Android: ${{ needs.deploy-android.result || 'Skipped' }}"
         echo ""
-        echo "Configuration committed to repository ✅"
+        echo "Temporary brand files created and cleaned up ✅"
         echo "Build artifacts uploaded ✅"
+        echo "No permanent changes made to repository ✅"
